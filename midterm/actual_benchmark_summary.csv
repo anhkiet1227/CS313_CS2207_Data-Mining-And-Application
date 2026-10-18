@@ -1,0 +1,6 @@
+Model,Test Accuracy,Test Precision,Test Recall,Test F1-Score,Training Time (s),Complexity / Parameters
+Decision Tree (CART),0.8754,0.8753279394383177,0.8754,0.8753090492142835,16.72,Single deep tree (max_depth=None)
+Linear SVM (SGDClassifier),0.9191,0.918859576400835,0.9191,0.9187604249376052,14.11,"7,850 weights"
+Logistic Regression (saga),0.926,0.9258426513247933,0.926,0.9258442787880266,56.75,"7,850 weights"
+Random Forest (100 trees),0.9704,0.9703956228285179,0.9704,0.9703722598097009,4.54,Ensemble of 100 deep trees
+ANN (MLP 784-128-10),0.9752,0.9753900474189632,0.9752,0.9752088858884607,8.22,"101,770 params"
