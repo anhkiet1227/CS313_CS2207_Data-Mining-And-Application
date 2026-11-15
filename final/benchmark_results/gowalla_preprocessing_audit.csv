@@ -1,0 +1,5 @@
+dataset,stage,interactions,users,items
+Gowalla,raw_downloaded,1027370,29858,40981
+Gowalla,valid_schema,1027370,29858,40981
+Gowalla,unique_user_item,1027370,29858,40981
+Gowalla,core_iteration_1,1027370,29858,40981

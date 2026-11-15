@@ -1,0 +1,4 @@
+dataset,users_measured,items_measured,interactions_measured,avg_inter_per_user,density_pct,paper_table1_users,paper_table1_items,paper_table1_interactions,paper_table1_avg,paper_table1_density_pct
+Beauty (Downloaded & 5-Core Processed),22363,12101,198502,8.88,0.0734,22.4k,12.1k,198.5k,8.9,0.07
+Gowalla (Downloaded & 5-Core Processed),29858,40981,1027370,34.41,0.084,29.9k,41.0k,1027.4k,34.4,0.08
+Yelp2018 (Downloaded & 5-Core Processed),31668,38048,1561406,49.31,0.1296,31.7k,38.0k,1561.4k,49.3,0.13

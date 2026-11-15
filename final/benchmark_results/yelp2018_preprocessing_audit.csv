@@ -1,0 +1,5 @@
+dataset,stage,interactions,users,items
+Yelp2018,raw_downloaded,1561406,31668,38048
+Yelp2018,valid_schema,1561406,31668,38048
+Yelp2018,unique_user_item,1561406,31668,38048
+Yelp2018,core_iteration_1,1561406,31668,38048

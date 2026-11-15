@@ -1,0 +1,22 @@
+{
+  "dataset": "Amazon Beauty + Gowalla + Yelp2018",
+  "url": "https://mcauleylab.ucsd.edu/public_datasets/data/amazon/categoryFiles/ratings_Beauty.csv",
+  "gowalla_urls": {
+    "train": "https://raw.githubusercontent.com/kuandeng/LightGCN/master/Data/gowalla/train.txt",
+    "test": "https://raw.githubusercontent.com/kuandeng/LightGCN/master/Data/gowalla/test.txt"
+  },
+  "yelp2018_urls": {
+    "train": "https://raw.githubusercontent.com/kuandeng/LightGCN/master/Data/yelp2018/train.txt",
+    "test": "https://raw.githubusercontent.com/kuandeng/LightGCN/master/Data/yelp2018/test.txt"
+  },
+  "raw_path": "c:\\Users\\ACER\\Desktop\\CS313_CS2207_Data-Mining-And_Application\\final\\directau_beauty_cache\\ratings_Beauty.csv",
+  "sha256": "17d5232b90444beecfe758ce1446e5300230491f3a88ac802992ca95fc4c150f",
+  "downloaded_at_utc": "2026-11-14T18:23:32.982527+00:00",
+  "raw_rows": 2023070,
+  "raw_users": 1210271,
+  "raw_items": 249274,
+  "core_minimum": 5,
+  "core_rows": 198502,
+  "core_users": 22363,
+  "core_items": 12101
+}
