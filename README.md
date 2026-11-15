@@ -18,7 +18,13 @@ CS313_CS2207_Data-Mining-And_Application/
 │   ├── app.py                         # Ứng dụng tương tác Streamlit minh họa Toán học & Thực nghiệm ANN
 │   ├── actual_benchmark.ipynb         # Notebook huấn luyện và đo đạc thực nghiệm trên tập dữ liệu MNIST
 │   └── actual_benchmark_summary.csv   # Bảng tổng hợp kết quả thực nghiệm đối sánh các mô hình
-├── final/                             # Đồ án Cuối Kỳ (Đang thực hiện - Xem Phần II bên dưới)
+├── final/                             # Đồ án Cuối Kỳ (Chuyên đề DirectAU — KDD '22)
+│   ├── app.py                         # Ứng dụng tương tác Streamlit gồm 6 module mô phỏng & gợi ý Top-K
+│   ├── process_and_benmark.ipynb      # Notebook tải dữ liệu, tiền xử lý, huấn luyện & benchmark toàn diện
+│   ├── dataset/                       # Dữ liệu gốc (.inter) từ nguồn thống nhất & các tập chia train/valid/test
+│   ├── model/                         # Trọng số mô hình đã huấn luyện (.pt) cho Beauty, Gowalla, Yelp2018
+│   └── benchmark_results/             # Bảng audit tiền xử lý, lịch sử huấn luyện, kết quả đánh giá & ablation
+├── ref/                               # Bài báo gốc DirectAU.pdf và mã nguồn tham chiếu THUwangcy/DirectAU
 ├── LICENSE
 └── README.md                          # Tài liệu hướng dẫn và giải thích chi tiết dự án
 ```
@@ -310,27 +316,104 @@ $$
 ---
 
 # Phần II: Đồ Án Cuối Kỳ (`final/`)
-> 📌 *Phần này được dành riêng để cập nhật nội dung, mã nguồn và báo cáo thực nghiệm cho Đồ Án Cuối Kỳ môn Khai Thác Dữ Liệu và Ứng Dụng.*
+## Chuyên Đề: DirectAU (KDD '22) — Towards Representation Alignment and Uniformity in Collaborative Filtering
 
-### 1. Giới Thiệu Bài Toán & Mục Tiêu (`TODO`)
-- **Tên đề tài cuối kỳ:** *(Đang cập nhật...)*
-- **Mô tả bài toán:** *(Đang cập nhật...)*
-- **Mục tiêu khai thác dữ liệu:** *(Đang cập nhật...)*
+> **Câu hỏi xuyên suốt:** *"Làm thế nào để tối ưu trực tiếp chất lượng hình học của không gian biểu diễn trên mặt cầu đơn vị trong Lọc cộng tác mà không cần lấy mẫu âm (Negative-Sample-Free)?"*
 
-### 2. Tập Dữ Liệu & Tiền Xử Lý (`TODO`)
-- **Nguồn dữ liệu:** *(Đang cập nhật...)*
-- **Quy trình làm sạch, trích xuất đặc trưng & EDA:** *(Đang cập nhật...)*
+Dựa trên bài báo gốc *Towards Representation Alignment and Uniformity in Collaborative Filtering* (Chenyang Wang và cộng sự, KDD 2022 — [`ref/DirectAU.pdf`](ref/DirectAU.pdf)), phần đồ án cuối kỳ trong thư mục [`final/`](final/) hiện thực hóa hoàn chỉnh quy trình từ tải dữ liệu thô từ một nguồn thống nhất, tiền xử lý **Iterative 5-Core**, chia tập **80%/10%/10% theo từng User**, huấn luyện đối sánh **BPRMF** vs **DirectAU**, thực nghiệm triệt tiêu (**Ablation Study**), khảo sát độ nhạy siêu tham số $\gamma$, đến ứng dụng trực quan hóa & gợi ý tương tác **Streamlit** ([`final/app.py`](final/app.py)).
 
-### 3. Phương Pháp Đề Xuất & Kiến Trúc Mô Hình (`TODO`)
-- **Các thuật toán / Mô hình sử dụng:** *(Đang cập nhật...)*
-- **Cơ sở toán học & Lý do lựa chọn:** *(Đang cập nhật...)*
+---
 
-### 4. Kết Quả Thực Nghiệm & Đánh Giá (`TODO`)
-- **Kịch bản thực nghiệm & Độ đo đánh giá:** *(Đang cập nhật...)*
-- **Bảng so sánh kết quả:** *(Đang cập nhật...)*
+### 1. Giới Thiệu Bài Toán & Mục Tiêu
+- **Tên đề tài cuối kỳ:** Hiện thực hóa, tái lập thực nghiệm và mô phỏng trực quan phương pháp **DirectAU** trong Hệ thống gợi ý Lọc cộng tác (Collaborative Filtering).
+- **Vấn đề của phương pháp truyền thống (BPRMF):**
+  - Hàm mục tiêu BPR phụ thuộc vào việc lấy mẫu âm ngẫu nhiên (negative sampling). Khi điểm dự đoán của cặp tương tác dương $(u, i^+)$ lớn hơn mẫu âm dễ $(u, i^-)$, đạo hàm $\sigma(s(u, i^-) - s(u, i^+)) \to 0$ làm quá trình kéo cặp dương lại gần bị chậm hoặc chững lại, đồng thời dễ gây suy giảm độ đồng đều trên mặt cầu biểu diễn.
+- **Mục tiêu thực hiện trong [`final/process_and_benmark.ipynb`](final/process_and_benmark.ipynb) và [`final/app.py`](final/app.py):**
+  1. Xây dựng pipeline tự động tải cả 3 bộ dữ liệu chuẩn (`Beauty`, `Gowalla`, `Yelp2018`) từ **1 nguồn thống nhất duy nhất**, kiểm định **Iterative 5-Core**, đối chiếu khớp **100%** với Bảng 1 của bài báo.
+  2. Tách bạch rõ ràng dữ liệu (`final/dataset/`), trọng số mô hình (`final/model/`), và bảng thống kê/kết quả (`final/benchmark_results/`) với tiền tố đặt tên rõ ràng (`beauty_*`, `gowalla_*`, `yelp2018_*`).
+  3. Huấn luyện & đánh giá **Full-Item Ranking** (`Recall@10, 20, 50` và `NDCG@10, 20, 50`) trên toàn bộ người dùng và toàn bộ catalog sản phẩm của cả 3 bộ dữ liệu.
+  4. Kiểm chứng thực nghiệm **Ablation Study** (Section 5.3), **Độ nhạy tham số $\gamma$** (Section 5.6), hình học mặt cầu $\mathbb{S}^{63}$, và tích hợp vào giao diện tương tác 6 module trên Streamlit.
 
-### 5. Hướng Dẫn Chạy Mã Nguồn Cuối Kỳ (`TODO`)
-```bash
-# Hướng dẫn chạy thực nghiệm và ứng dụng demo cuối kỳ tại thư mục final/
-# (Sẽ cập nhật sau khi hoàn thành đồ án cuối kỳ)
-```
+---
+
+### 2. Tập Dữ Liệu & Tiền Xử Lý (`final/dataset/`)
+
+Toàn bộ 3 bộ dữ liệu được tải bằng một hàm xử lý thống nhất `download_and_preprocess_dataset()` từ **cùng một nguồn chính thức** của nhóm tác giả DirectAU (`https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset/`), kiểm tra schema, khử trùng lặp `(user_token, item_token)`, và lọc **Iterative 5-Core** (`filter_core(..., minimum=5)`):
+
+| Bộ Dữ Liệu | Tệp Gốc Tải Về | Số Users | Số Items | Số Tương Tác (5-Core) | Min User Deg | Min Item Deg | Avg Inter / User | Mật Độ (Density) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Beauty** | `final/dataset/beauty.inter` | `22,363` | `12,101` | `198,502` | `5` | `5` | `8.88` | `0.0734%` |
+| **Gowalla** | `final/dataset/gowalla.inter` | `29,858` | `40,981` | `1,027,370` | `9` | `10` | `34.41` | `0.0840%` |
+| **Yelp2018** | `final/dataset/yelp2018.inter` | `31,668` | `38,048` | `1,561,406` | `18` | `10` | `49.31` | `0.1296%` |
+
+- **Chia tập dữ liệu (`SPLIT_SEED = 2026`):** Áp dụng giao thức **80% Train / 10% Valid / 10% Test theo từng User** (`n_valid = max(1, int(0.1 * n))`, `n_test = max(1, int(0.1 * n))`), kiểm tra chặt chẽ `train ∩ valid = ∅`, `train ∩ test = ∅`, `valid ∩ test = ∅`:
+  - **Beauty:** Train `148,766` | Valid `24,868` | Test `24,868`
+  - **Gowalla:** Train `845,292` | Valid `91,039` | Test `91,039`
+  - **Yelp2018:** Train `1,274,132` | Valid `143,637` | Test `143,637`
+- **Tệp xuất ra tại `final/dataset/`:** Với mỗi bộ `<prefix>` $\in \{\text{beauty}, \text{gowalla}, \text{yelp2018}\}$, notebook tự động sinh đầy đủ: `<prefix>.inter`, `<prefix>_processed_interactions.csv`, `<prefix>_user_mapping.csv`, `<prefix>_item_mapping.csv`, `<prefix>_train.csv`, `<prefix>_valid.csv`, `<prefix>_test.csv`, `<prefix>_eval_users.npy`, và `dataset_source_info.json`.
+
+---
+
+### 3. Phương Pháp Đề Xuất & Kiến Trúc Mô Hình (`final/model/`)
+
+1. **Bộ mã hóa (`Encoder`):**
+   - Cài đặt **Matrix Factorization (`MF`)** với `EMBEDDING_DIM = 64`, khởi tạo `xavier_normal_`, cùng kiến trúc đồ thị **LightGCN (`LGCNEncoder`)** kiểm thử trong bộ unit test toán học `run_pipeline_checks()`.
+2. **Hàm mục tiêu DirectAU (Eq. 6 & Eq. 7):**
+   Chuẩn hóa $L_2$ các vector biểu diễn lên mặt cầu đơn vị $\mathbb{S}^{d-1}$ ($\tilde{f}(u) = \frac{f(u)}{\|f(u)\|_2}$, $\tilde{f}(i) = \frac{f(i)}{\|f(i)\|_2}$):
+   $$l_{\text{align}} = \mathbb{E}_{(u, i) \sim p_{\text{pos}}} \|\tilde{f}(u) - \tilde{f}(i)\|_2^2$$
+   $$l_{\text{uniform}} = \frac{1}{2} \log \mathbb{E}_{u, u' \sim p_{\text{user}}} e^{-2\|\tilde{f}(u) - \tilde{f}(u')\|_2^2} + \frac{1}{2} \log \mathbb{E}_{i, i' \sim p_{\text{item}}} e^{-2\|\tilde{f}(i) - \tilde{f}(i')\|_2^2}$$
+   $$\mathcal{L}_{\text{DirectAU}} = l_{\text{align}} + \gamma \, l_{\text{uniform}}$$
+   Trong đó, nhờ vector đã chuẩn hóa đơn vị ($\|\tilde{f}(x)\|_2 = 1$), biểu thức $-2\|\tilde{f}(x) - \tilde{f}(y)\|_2^2 = 4\langle \tilde{f}(x), \tilde{f}(y)\rangle - 4$ được tính trực tiếp qua tích ma trận đối xứng, đảm bảo tương đương toán học tuyệt đối trong cả bước lan truyền thẳng và đạo hàm ngược.
+3. **Tối ưu hóa `ActiveRowAdam` & Lưu trữ Checkpoint:**
+   - Sử dụng `ActiveRowAdam` chỉ cập nhật moment Adam cho các dòng Embedding xuất hiện trong mini-batch (tăng tốc đáng kể trên CPU và tránh trôi moment bậc 1/2 của các user/item không xuất hiện trong batch).
+   - Trọng số tốt nhất (chọn theo `Validation NDCG@20`) được lưu riêng vào thư mục `final/model/`:
+     - `beauty_BPR_best.pt`, `beauty_DirectAU_best.pt`
+     - `gowalla_BPR_best.pt`, `gowalla_DirectAU_best.pt`
+     - `yelp2018_BPR_best.pt`, `yelp2018_DirectAU_best.pt`
+
+---
+
+### 4. Kết Quả Thực Nghiệm & Đánh Giá (`final/benchmark_results/`)
+
+#### A. Kết quả Full-Item Ranking trên toàn bộ Users & Catalog Items (`all_datasets_benchmark_results.csv`)
+Cấu hình chạy trong [`final/process_and_benmark.ipynb`](final/process_and_benmark.ipynb): `EMBEDDING_DIM = 64`, `MAX_BATCHES_PER_EPOCH = 600`, `batch_size` (`256` cho Beauty; `512` cho Gowalla, Yelp2018), `12` epochs cho `BPR` (`lr=1e-3`) và `15` epochs cho `DirectAU` (`lr=3e-3`), đánh giá trên **100% users** và **toàn bộ catalog items** (mask lịch sử `train ∪ valid`):
+
+| Bộ Dữ Liệu | Phương Pháp | $\gamma$ | Best Epoch | Recall@10 | Recall@20 | Recall@50 | NDCG@10 | NDCG@20 | NDCG@50 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Beauty** | `BPR` | — | `12/12` | `0.0467` | `0.0685` | `0.1030` | `0.0249` | `0.0306` | `0.0377` |
+| **Beauty** | **`DirectAU`** | `0.5` | `14/15` | **`0.0834`** | **`0.1215`** | **`0.1833`** | **`0.0468`** | **`0.0567`** | **`0.0694`** |
+| **Gowalla** | `BPR` | — | `12/12` | `0.0440` | `0.0648` | `0.1040` | `0.0319` | `0.0379` | `0.0476` |
+| **Gowalla** | **`DirectAU`** | `1.0` | `12/15` | **`0.1131`** | **`0.1668`** | **`0.2675`** | **`0.0808`** | **`0.0962`** | **`0.1207`** |
+| **Yelp2018** | `BPR` | — | `12/12` | `0.0244` | `0.0412` | `0.0771` | `0.0192` | `0.0248` | `0.0352` |
+| **Yelp2018** | **`DirectAU`** | `2.0` | `15/15` | **`0.0484`** | **`0.0811`** | **`0.1497`** | **`0.0390`** | **`0.0500`** | **`0.0699`** |
+
+#### B. Nghiên cứu Triệt tiêu (`beauty_ablation_history.csv`) & Độ nhạy $\gamma$ (`beauty_gamma_sensitivity.csv`)
+- **Ablation Study trên Beauty (10 epochs):**
+  - `align_only` ($\gamma = 0$): $l_{\text{align}}$ giảm từ `1.9952` xuống `0.2513`, nhưng $\exp(l_{\text{uniform}})$ tăng vọt gấp **13.4 lần** (từ `0.0238` lên `0.3180`), gây sụp đổ biểu diễn làm `Valid NDCG@20` đạt đỉnh `0.0446` ở Epoch 5 rồi tụt xuống `0.0267` ở Epoch 10.
+  - `uniform_only`: Giữ $\exp(l_{\text{uniform}}) \approx 0.0209$ nhưng $l_{\text{align}}$ giữ nguyên quanh `2.0003`, khiến `Valid NDCG@20` chỉ đạt `0.0014` ở Epoch 10.
+  - `directau` ($\gamma = 0.5$): Giữ độ đồng đều ổn định ($\exp(l_{\text{uniform}}) \approx 0.0236$) trong khi giảm $l_{\text{align}}$ xuống `0.7973`, giúp `Valid NDCG@20` tăng trưởng bền vững lên **`0.0517`** (Epoch 9) và `Valid Recall@20` đạt **`0.1141`** (Epoch 10).
+- **Khảo sát độ nhạy $\gamma \in \{0.2, 0.5, 1.0, 2.0, 5.0\}$ trên Beauty (`eval_users`):**
+  - Đỉnh hiệu năng đạt tại **$\gamma = 0.5$** (`Test Recall@20 = 0.1326`, `Test NDCG@20 = 0.0572`). Khi tăng $\gamma$ lên `5.0`, lực đẩy quá mạnh cản trở việc kéo các cặp tương tác dương lại gần ($l_{\text{align}}$ tăng lên `0.9854`), làm `Test Recall@20` giảm xuống `0.0854`.
+
+#### C. Ứng dụng Tương tác Streamlit (`final/app.py`) gồm 6 Module
+1. **Hình học Mặt cầu Đơn vị:** Mô phỏng tối ưu hóa trực tiếp trên $\mathbb{S}^1$ (2D) & $\mathbb{S}^2$ (3D xoay 360°) cho 4 chế độ và chứng minh Định lý 1.
+2. **Tiền xử lý Dữ liệu:** Nhật ký tải từ nguồn thống nhất, đối chiếu Table 1, chia tập 80/10/10 và phân phối bậc Long-Tail trên cả 3 tập.
+3. **Động lực Học tập:** Đường cong hội tụ `NDCG@20`, `Recall@20`, quỹ đạo $(l_{\text{uniform}}, l_{\text{align}})$ thực nghiệm và bản đồ 8 phương pháp CF (Figure 4).
+4. **Ablation Study & Độ nhạy $\gamma$:** Biểu đồ minh họa hiện tượng Dimensional Collapse và quy luật phụ thuộc mật độ dữ liệu của $\gamma$.
+5. **Đối sánh Toàn diện:** Kết quả thực nghiệm tự chạy trên 3 bộ dữ liệu, phân phối góc Cosine trên $\mathbb{S}^{63}$, và bảng đối chiếu Tables 2, 3, 4 của bài báo.
+6. **Hệ thống Gợi ý Top-K Thực tế:** Nạp checkpoint trực tiếp từ `final/model/` để gợi ý và kiểm tra Hit/Recall/NDCG theo thời gian thực cho cả **Beauty**, **Gowalla**, và **Yelp2018**.
+
+---
+
+### 5. Hướng Dẫn Chạy Mã Nguồn Cuối Kỳ (`final/`)
+
+1. **Cài đặt các thư viện cần thiết:**
+   ```bash
+   pip install torch numpy pandas scipy matplotlib plotly streamlit
+   ```
+2. **Chạy toàn bộ Notebook tải dữ liệu, tiền xử lý, huấn luyện & xuất kết quả:**
+   Mở file [`final/process_and_benmark.ipynb`](final/process_and_benmark.ipynb) và bấm **Run All**. Notebook sẽ tự động tạo toàn bộ tệp dữ liệu trong `final/dataset/`, trọng số mô hình trong `final/model/`, và bảng kết quả trong `final/benchmark_results/`.
+3. **Khởi chạy ứng dụng Streamlit cuối kỳ:**
+   ```bash
+   streamlit run final/app.py
+   ```
