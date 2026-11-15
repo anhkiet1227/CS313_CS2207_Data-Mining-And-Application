@@ -1,0 +1,5 @@
+dataset,stage,interactions,users,items
+Beauty,raw_downloaded,198502,22363,12101
+Beauty,valid_schema,198502,22363,12101
+Beauty,unique_user_item,198502,22363,12101
+Beauty,core_iteration_1,198502,22363,12101

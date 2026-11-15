@@ -1,0 +1,3 @@
+dataset,method,gamma,batch_size,best_epoch,epochs_run,test_recall@10_all,test_recall@20_all,test_recall@50_all,test_ndcg@10_all,test_ndcg@20_all,test_ndcg@50_all,evaluated_users_all,catalog_items,model_path
+Gowalla,BPR,,512,12,12,0.04395059553118394,0.06478002754746187,0.10395511724128119,0.0318835722884672,0.037886017118298934,0.04758533404931652,29858,40981,model/gowalla_BPR_best.pt
+Gowalla,DirectAU,1.0,512,12,15,0.11307656198774205,0.16678471558456356,0.26753351665141833,0.08079982385588069,0.09616988468408127,0.12072281079644244,29858,40981,model/gowalla_DirectAU_best.pt

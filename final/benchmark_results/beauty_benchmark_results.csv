@@ -1,0 +1,3 @@
+dataset,method,gamma,batch_size,best_epoch,epochs_run,test_recall@10_all,test_recall@20_all,test_recall@50_all,test_ndcg@10_all,test_ndcg@20_all,test_ndcg@50_all,evaluated_users_all,catalog_items,model_path
+Beauty,BPR,,256,12,12,0.04669085566214753,0.06848090634384724,0.10297642769847798,0.02488989012416688,0.030607470815591117,0.03774710325222106,22363,12101,model/beauty_BPR_best.pt
+Beauty,DirectAU,0.5,256,14,15,0.08338537857415373,0.12150095815807742,0.18332973182583795,0.046762746289957025,0.05669971885045584,0.06936006587868386,22363,12101,model/beauty_DirectAU_best.pt

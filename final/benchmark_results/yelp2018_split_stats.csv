@@ -1,0 +1,4 @@
+dataset,split,interactions,users,items,min_per_user,max_per_user,targets_without_train_item
+Yelp2018,train,1274132,31668,38048,16,1849,0
+Yelp2018,valid,143637,31668,32469,1,231,0
+Yelp2018,test,143637,31668,32559,1,231,0

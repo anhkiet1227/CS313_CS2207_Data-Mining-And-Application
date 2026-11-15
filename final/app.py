@@ -30,11 +30,12 @@ plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "Arial", "sans-serif"]
 plt.rcParams["axes.edgecolor"] = "#cccccc"
 plt.rcParams["axes.linewidth"] = 0.8
 
-# Đường dẫn thư mục dữ liệu tự thân (không phụ thuộc vào smoke_test_directAU)
+# Cấu trúc 3 thư mục rõ ràng được sinh trực tiếp từ final/process_and_benmark.ipynb
 FINAL_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = FINAL_DIR.parent
+DATASET_DIR = FINAL_DIR / "dataset"
+MODEL_DIR = FINAL_DIR / "model"
 BENCH_DIR = FINAL_DIR / "benchmark_results"
-CACHE_DIR = FINAL_DIR / "directau_beauty_cache"
 
 # =====================================================================
 # SIDEBAR ĐIỀU HƯỚNG
@@ -57,7 +58,7 @@ menu = st.sidebar.radio(
         "3. 📈 Động Lực Học Tập & Quỹ Đạo l_align - l_uniform",
         "4. 🧪 Nghiên Cứu Triệt Tiêu (Ablation) & Độ Nhạy Tham Số γ",
         "5. 🏆 Đối Sánh Toàn Diện: Thực Nghiệm Tự Chạy vs 9 Mô Hình SOTA",
-        "6. 🔍 Hệ Thống Gợi Ý Top-K Thực Tế Trên Amazon Beauty",
+        "6. 🔍 Hệ Thống Gợi Ý Top-K Thực Tế (Beauty, Gowalla, Yelp2018)",
     ],
     key="nav_menu",
 )
@@ -65,73 +66,81 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.info(
     """
-💡 **Điểm nhấn của hệ thống:**
-- **Bám sát bài báo KDD '22 (`ref/DirectAU.pdf`)** và mã nguồn gốc `ref/DirectAU`.
-- **Tự tải & Tiền xử lý cả 3 bộ dữ liệu chuẩn:** `Beauty` (`22,363` users, `12,101` items, `198,502` tương tác), `Gowalla` (`29,858` users, `40,981` items, `1,027,370` tương tác), và `Yelp2018` (`31,668` users, `38,048` items, `1,561,406` tương tác).
-- **Đánh giá Full-Item Ranking** trên toàn bộ catalog sản phẩm và toàn bộ người dùng của cả 3 bộ dữ liệu.
+💡 **Cấu trúc thư mục chuẩn hóa (`final/`):**
+- `final/dataset/`: Tải từ **1 nguồn duy nhất** (`THUwangcy/DirectAU/main/dataset`) & lưu các tệp `beauty_*`, `gowalla_*`, `yelp2018_*`.
+- `final/model/`: Lưu riêng toàn bộ trọng số `.pt` (`beauty_BPR_best.pt`, `beauty_DirectAU_best.pt`, `gowalla_*`, `yelp2018_*`).
+- `final/benchmark_results/`: Lưu toàn bộ bảng kết quả kiểm toán, lịch sử hội tụ & đánh giá thực nghiệm.
 """
 )
 
 
 # =====================================================================
-# CÁC HÀM NẠP DỮ LIỆU & CACHE (100% TỪ BENCH_DIR)
+# CÁC HÀM NẠP DỮ LIỆU & CACHE (100% ĐỒNG BỘ VỚI process_and_benmark.ipynb)
 # =====================================================================
 @st.cache_data
 def load_csv_artifacts():
     data = {}
-    data["audit"] = pd.read_csv(BENCH_DIR / "preprocessing_audit.csv")
+    data["beauty_audit"] = pd.read_csv(BENCH_DIR / "beauty_preprocessing_audit.csv")
     data["gowalla_audit"] = pd.read_csv(BENCH_DIR / "gowalla_preprocessing_audit.csv")
     data["yelp_audit"] = pd.read_csv(BENCH_DIR / "yelp2018_preprocessing_audit.csv")
     data["all_audit"] = pd.read_csv(BENCH_DIR / "all_datasets_audit.csv")
-    data["split_stats"] = pd.read_csv(BENCH_DIR / "split_stats.csv")
-    data["split_stats_all"] = pd.read_csv(BENCH_DIR / "split_stats_all_datasets.csv")
-    data["smoke_results"] = pd.read_csv(BENCH_DIR / "smoke_results.csv")
-    data["smoke_bpr_hist"] = pd.read_csv(BENCH_DIR / "smoke_BPR_history.csv")
-    data["smoke_dau_hist"] = pd.read_csv(BENCH_DIR / "smoke_DirectAU_history.csv")
-    data["smoke_topk"] = pd.read_csv(BENCH_DIR / "smoke_topk.csv")
+
+    data["beauty_split_stats"] = pd.read_csv(BENCH_DIR / "beauty_split_stats.csv")
+    data["gowalla_split_stats"] = pd.read_csv(BENCH_DIR / "gowalla_split_stats.csv")
+    data["yelp_split_stats"] = pd.read_csv(BENCH_DIR / "yelp2018_split_stats.csv")
+    data["split_stats_all"] = pd.read_csv(BENCH_DIR / "all_datasets_split_stats.csv")
 
     data["table1"] = pd.read_csv(BENCH_DIR / "table1_dataset_stats.csv")
-    data["full_results"] = pd.read_csv(BENCH_DIR / "full_benchmark_results.csv")
+    data["beauty_results"] = pd.read_csv(BENCH_DIR / "beauty_benchmark_results.csv")
+    data["gowalla_results"] = pd.read_csv(BENCH_DIR / "gowalla_benchmark_results.csv")
+    data["yelp_results"] = pd.read_csv(BENCH_DIR / "yelp2018_benchmark_results.csv")
     data["all_bench_results"] = pd.read_csv(BENCH_DIR / "all_datasets_benchmark_results.csv")
-    data["full_bpr_hist"] = pd.read_csv(BENCH_DIR / "BPR_full_history.csv")
-    data["full_dau_hist"] = pd.read_csv(BENCH_DIR / "DirectAU_full_history.csv")
+
     data["histories"] = {
-        ds: {
-            "BPR": pd.read_csv(BENCH_DIR / f"{ds}_BPR_history.csv"),
-            "DirectAU": pd.read_csv(BENCH_DIR / f"{ds}_DirectAU_history.csv"),
-        }
-        for ds in ("Beauty", "Gowalla", "Yelp2018")
+        "Beauty": {
+            "BPR": pd.read_csv(BENCH_DIR / "beauty_BPR_history.csv"),
+            "DirectAU": pd.read_csv(BENCH_DIR / "beauty_DirectAU_history.csv"),
+        },
+        "Gowalla": {
+            "BPR": pd.read_csv(BENCH_DIR / "gowalla_BPR_history.csv"),
+            "DirectAU": pd.read_csv(BENCH_DIR / "gowalla_DirectAU_history.csv"),
+        },
+        "Yelp2018": {
+            "BPR": pd.read_csv(BENCH_DIR / "yelp2018_BPR_history.csv"),
+            "DirectAU": pd.read_csv(BENCH_DIR / "yelp2018_DirectAU_history.csv"),
+        },
     }
-    data["ablation"] = pd.read_csv(BENCH_DIR / "ablation_history.csv")
-    data["gamma"] = pd.read_csv(BENCH_DIR / "gamma_sensitivity.csv")
-    data["full_topk"] = pd.read_csv(BENCH_DIR / "topk_full_comparison.csv")
-    data["geom"] = json.loads((BENCH_DIR / "embedding_geometry.json").read_text(encoding="utf-8"))
-    data["showcase_users"] = json.loads((BENCH_DIR / "showcase_users.json").read_text(encoding="utf-8"))
-    data["source_info"] = json.loads((BENCH_DIR / "source.json").read_text(encoding="utf-8"))
-    data["deg_dist_all"] = json.loads((BENCH_DIR / "degree_distributions_all.json").read_text(encoding="utf-8"))
+    data["ablation"] = pd.read_csv(BENCH_DIR / "beauty_ablation_history.csv")
+    data["gamma"] = pd.read_csv(BENCH_DIR / "beauty_gamma_sensitivity.csv")
+    data["beauty_topk"] = pd.read_csv(BENCH_DIR / "beauty_topk_comparison.csv")
+    data["geom"] = json.loads((BENCH_DIR / "beauty_embedding_geometry.json").read_text(encoding="utf-8"))
+    data["showcase_users"] = json.loads((BENCH_DIR / "beauty_showcase_users.json").read_text(encoding="utf-8"))
+    data["source_info"] = json.loads((DATASET_DIR / "dataset_source_info.json").read_text(encoding="utf-8"))
+    data["deg_dist_all"] = json.loads((BENCH_DIR / "all_datasets_degree_distributions.json").read_text(encoding="utf-8"))
     return data
 
 
 @st.cache_resource
-def load_recommender_assets():
-    train_df = pd.read_csv(BENCH_DIR / "train.csv")
-    valid_df = pd.read_csv(BENCH_DIR / "valid.csv")
-    test_df = pd.read_csv(BENCH_DIR / "test.csv")
-    user_tokens = pd.read_csv(BENCH_DIR / "user_mapping.csv")["user_token"].tolist()
-    item_tokens = pd.read_csv(BENCH_DIR / "item_mapping.csv")["item_token"].tolist()
-    eval_users = np.load(BENCH_DIR / "eval_users.npy")
+def load_recommender_assets(dataset_name: str = "Beauty"):
+    ds_prefix = dataset_name.lower()
+    train_df = pd.read_csv(DATASET_DIR / f"{ds_prefix}_train.csv")
+    valid_df = pd.read_csv(DATASET_DIR / f"{ds_prefix}_valid.csv")
+    test_df = pd.read_csv(DATASET_DIR / f"{ds_prefix}_test.csv")
+    user_tokens = pd.read_csv(DATASET_DIR / f"{ds_prefix}_user_mapping.csv", dtype=str)["user_token"].tolist()
+    item_tokens = pd.read_csv(DATASET_DIR / f"{ds_prefix}_item_mapping.csv", dtype=str)["item_token"].tolist()
+    eval_users = np.load(DATASET_DIR / f"{ds_prefix}_eval_users.npy")
 
     train_hist = {int(u): set(g["item"].tolist()) for u, g in train_df.groupby("user")}
     valid_targ = {int(u): set(g["item"].tolist()) for u, g in valid_df.groupby("user")}
     test_targ = {int(u): set(g["item"].tolist()) for u, g in test_df.groupby("user")}
     test_hist = {u: train_hist[u] | valid_targ[u] for u in train_hist}
 
-    bpr_full = torch.load(BENCH_DIR / "BPR_full_best.pt", map_location="cpu", weights_only=False)
-    dau_full = torch.load(BENCH_DIR / "DirectAU_full_best.pt", map_location="cpu", weights_only=False)
-    bpr_smoke = torch.load(BENCH_DIR / "BPR_smoke_best.pt", map_location="cpu", weights_only=False)
-    dau_smoke = torch.load(BENCH_DIR / "DirectAU_smoke_best.pt", map_location="cpu", weights_only=False)
+    bpr_ckpt = torch.load(MODEL_DIR / f"{ds_prefix}_BPR_best.pt", map_location="cpu", weights_only=False)
+    dau_ckpt = torch.load(MODEL_DIR / f"{ds_prefix}_DirectAU_best.pt", map_location="cpu", weights_only=False)
 
     return {
+        "dataset": dataset_name,
+        "prefix": ds_prefix,
         "user_tokens": user_tokens,
         "item_tokens": item_tokens,
         "eval_users": eval_users,
@@ -139,25 +148,20 @@ def load_recommender_assets():
         "valid_targ": valid_targ,
         "test_targ": test_targ,
         "test_hist": test_hist,
-        "full_models": {
+        "models": {
             "BPR": (
-                bpr_full["model_state"]["user_embedding.weight"],
-                bpr_full["model_state"]["item_embedding.weight"],
+                bpr_ckpt["model_state"]["user_embedding.weight"],
+                bpr_ckpt["model_state"]["item_embedding.weight"],
             ),
             "DirectAU": (
-                dau_full["model_state"]["user_embedding.weight"],
-                dau_full["model_state"]["item_embedding.weight"],
+                dau_ckpt["model_state"]["user_embedding.weight"],
+                dau_ckpt["model_state"]["item_embedding.weight"],
             ),
         },
-        "smoke_models": {
-            "BPR": (
-                bpr_smoke["model_state"]["user_embedding.weight"],
-                bpr_smoke["model_state"]["item_embedding.weight"],
-            ),
-            "DirectAU": (
-                dau_smoke["model_state"]["user_embedding.weight"],
-                dau_smoke["model_state"]["item_embedding.weight"],
-            ),
+        "meta": {
+            "BPR_best_epoch": bpr_ckpt.get("best_epoch", "-"),
+            "DirectAU_best_epoch": dau_ckpt.get("best_epoch", "-"),
+            "DirectAU_gamma": dau_ckpt.get("gamma", "-"),
         },
     }
 
@@ -397,9 +401,11 @@ $$\mathcal{L}_{\text{BPR}} = \mathbb{E}_{(u, i) \sim p_{\text{pos}}} -\tilde{f}(
 # MODULE 2: TIỀN XỬ LÝ DỮ LIỆU THỰC TẾ (BEAUTY, GOWALLA, YELP2018)
 # =====================================================================
 elif menu == "2. 🧹 Tiền Xử Lý Dữ Liệu: Beauty, Gowalla, Yelp2018 → 5-Core & Split":
-    st.title("🧹 Quy Trình Tải & Tiền Xử Lý Cả 3 Bộ Dữ Liệu (`Beauty`, `Gowalla`, `Yelp2018`)")
+    st.title("🧹 Quy Trình Tải & Tiền Xử Lý Cả 3 Bộ Dữ Liệu Từ Cùng 1 Nguồn (`Beauty`, `Gowalla`, `Yelp2018`)")
     data = load_csv_artifacts()
-    audit_df = data["audit"]
+    beauty_audit_df = data["beauty_audit"]
+    gowalla_audit_df = data["gowalla_audit"]
+    yelp_audit_df = data["yelp_audit"]
     all_audit_df = data["all_audit"]
     table1_df = data["table1"]
     split_all_df = data["split_stats_all"]
@@ -409,10 +415,10 @@ elif menu == "2. 🧹 Tiền Xử Lý Dữ Liệu: Beauty, Gowalla, Yelp2018 →
     c_top1.metric("Amazon Beauty (5-Core)", "198,502 tương tác", delta="22,363 Users / 12,101 Items")
     c_top2.metric("Gowalla (5-Core)", "1,027,370 tương tác", delta="29,858 Users / 40,981 Items")
     c_top3.metric("Yelp2018 (5-Core)", "1,561,406 tương tác", delta="31,668 Users / 38,048 Items")
-    c_top4.metric("Độ khớp với Table 1 Paper", "100% Chính xác", delta="Khớp cả 3 tập dữ liệu")
+    c_top4.metric("Nguồn Dữ Liệu Thống Nhất", "1 Nguồn Duy Nhất", delta="THUwangcy/DirectAU (100% khớp Table 1)")
 
     tab_p1, tab_p2, tab_p3 = st.tabs([
-        "1. 🔄 Nhật Ký Tải & Lọc Iterative 5-Core Trên Cả 3 Bộ Dữ Liệu",
+        "1. 🔄 Nhật Ký Tải & Kiểm Định 5-Core Từ Nguồn Duy Nhất",
         "2. 📊 Đối Chiếu Table 1 & Chia Tập 80/10/10 Per-User (Beauty, Gowalla, Yelp2018)",
         "3. 📉 Phân Phối Đuôi Dài (Long-Tail) & Popularity-Weighted Uniformity (Appendix A.2)",
     ])
@@ -430,41 +436,39 @@ elif menu == "2. 🧹 Tiền Xử Lý Dữ Liệu: Beauty, Gowalla, Yelp2018 →
             }),
             width="stretch",
         )
+        ds_meta = src_info.get("datasets", {})
         st.markdown(
             f"""
-- **Nguồn dữ liệu tải tự động (Section 5.1.1 — Footnotes 2, 3, 4):**
-  - `Beauty`: `{src_info['url']}` (Mã băm SHA256: `{src_info['sha256']}`)
-  - `Gowalla`: `{src_info['gowalla_urls']['train']}` + `test.txt`
-  - `Yelp2018`: `{src_info['yelp2018_urls']['train']}` + `test.txt`
+- **Nguồn dữ liệu duy nhất (`UNIFIED_DATASET_BASE_URL`):** `{src_info.get('unified_source_repo', 'https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset')}`
+  - `Beauty` (`final/dataset/beauty.inter`): `{ds_meta.get('Beauty', {}).get('url', '')}` (SHA256: `{ds_meta.get('Beauty', {}).get('sha256', '')[:24]}...`)
+  - `Gowalla` (`final/dataset/gowalla.inter`): `{ds_meta.get('Gowalla', {}).get('url', '')}` (SHA256: `{ds_meta.get('Gowalla', {}).get('sha256', '')[:24]}...`)
+  - `Yelp2018` (`final/dataset/yelp2018.inter`): `{ds_meta.get('Yelp2018', {}).get('url', '')}` (SHA256: `{ds_meta.get('Yelp2018', {}).get('sha256', '')[:24]}...`)
 """
         )
-        col_a1, col_a2 = st.columns([1.05, 1.35])
+        col_a1, col_a2 = st.columns([1.15, 1.25])
         with col_a1:
-            st.markdown("##### 📋 Chi tiết 18 vòng lặp Iterative 5-Core trên Amazon Beauty:")
+            st.markdown("##### 📋 Nhật ký kiểm toán các bước (`beauty_`, `gowalla_`, `yelp2018_preprocessing_audit.csv`):")
+            combined_stage_df = pd.concat([beauty_audit_df, gowalla_audit_df, yelp_audit_df], ignore_index=True)
             st.dataframe(
-                audit_df.style.format({"interactions": "{:,}", "users": "{:,}", "items": "{:,}"}),
+                combined_stage_df.style.format({"interactions": "{:,}", "users": "{:,}", "items": "{:,}"}),
                 width="stretch",
-                height=390,
+                height=360,
             )
         with col_a2:
-            core_only = audit_df.iloc[3:].copy()
-            core_only["iter_num"] = range(1, len(core_only) + 1)
-            fig_core, ax_c = plt.subplots(figsize=(8.2, 4.2))
-            ax_c.plot(core_only["iter_num"], core_only["interactions"] / 1e3, "o-", color="#2563eb", lw=2.2, label="Interactions (nghìn)")
-            ax_c.plot(core_only["iter_num"], core_only["users"] / 1e3, "s--", color="#10b981", lw=2, label="Users (nghìn)")
-            ax_c.plot(core_only["iter_num"], core_only["items"] / 1e3, "^:", color="#dc2626", lw=2, label="Items (nghìn)")
-            ax_c.axhline(198.502, color="#2563eb", alpha=0.25, linestyle="--")
-            ax_c.set_xticks(range(1, len(core_only) + 1))
-            ax_c.set_xlabel("Vòng lặp lọc 5-Core (Iteration)", fontweight="bold")
-            ax_c.set_ylabel("Số lượng (Nghìn - Thousands)", fontweight="bold")
-            ax_c.set_title("Sự Hội Tụ Của Thuật Toán Iterative 5-Core Qua 18 Vòng Lặp (Beauty)", fontweight="bold")
-            ax_c.legend()
-            ax_c.grid(True, linestyle=":")
-            st.pyplot(fig_core)
-            plt.close(fig_core)
-            st.caption(
-                "🔬 **Tại sao lọc 1 lần là sai?** Ở vòng lặp 1 (`core_iteration_1`), việc xóa các user `< 5` tương tác làm nhiều item bị tụt xuống dưới 5 tương tác (còn 394,908 tương tác). Phải lặp đến vòng 17–18 đồ thị hai phía mới đạt điểm bất động chính xác (198,502 tương tác)."
-            )
+            fig_scale, ax_sc = plt.subplots(figsize=(7.6, 3.9))
+            x_ds = np.arange(len(all_audit_df))
+            w = 0.26
+            ax_sc.bar(x_ds - w, all_audit_df["users"] / 1e3, width=w, color="#2563eb", label="Users (Nghìn)")
+            ax_sc.bar(x_ds, all_audit_df["items"] / 1e3, width=w, color="#10b981", label="Items (Nghìn)")
+            ax_sc.bar(x_ds + w, all_audit_df["filtered_interactions"] / 1e4, width=w, color="#f59e0b", label="Interactions (Chục nghìn)")
+            ax_sc.set_xticks(x_ds)
+            ax_sc.set_xticklabels(all_audit_df["dataset"], fontweight="bold")
+            ax_sc.set_ylabel("Quy mô dữ liệu")
+            ax_sc.set_title("So Sánh Quy Mô Users, Items & Tương Tác Của 3 Bộ Dữ Liệu", fontweight="bold")
+            ax_sc.legend()
+            ax_sc.grid(True, linestyle=":")
+            st.pyplot(fig_scale)
+            plt.close(fig_scale)
 
     with tab_p2:
         st.subheader("2. Đối Chiếu Thống Kê Bảng 1 (Table 1) Trên Cả 3 Tập Dữ Liệu Chuẩn Của Bài Báo")
@@ -481,7 +485,7 @@ elif menu == "2. 🧹 Tiền Xử Lý Dữ Liệu: Beauty, Gowalla, Yelp2018 →
             width="stretch",
         )
         st.success(
-            "✅ **Xác nhận tái lập dữ liệu:** Cả 3 tập `Beauty`, `Gowalla`, và `Yelp2018` sau khi tải và lọc 5-Core đều khớp **tuyệt đối 100%** tới từng đơn vị với Bảng 1 và các tệp `.inter` gốc của nhóm tác giả!"
+            "✅ **Xác nhận tái lập dữ liệu:** Cả 3 tập `Beauty`, `Gowalla`, và `Yelp2018` tải từ nguồn thống nhất và lọc 5-Core đều khớp **tuyệt đối 100%** với Bảng 1 của bài báo KDD '22!"
         )
 
         st.markdown("---")
@@ -679,7 +683,7 @@ elif menu == "4. 🧪 Nghiên Cứu Triệt Tiêu (Ablation) & Độ Nhạy Tham
     ])
 
     with tab_ab:
-        st.subheader("1. Chứng Minh Thực Nghiệm Vai Trò Không Thể Thiếu Của Cả Alignment Lẫn Uniformity")
+        st.subheader("1. Chứng Minh Thực Nghiệm Vai Trò Không Thể Thiếu Của Cả Alignment Lẫn Uniformity (`beauty_ablation_history.csv`)")
         fig_ab, axes_ab = plt.subplots(1, 3, figsize=(15, 4.4))
         configs_ab = [
             ("align_only", "1. Chỉ Tối Ưu l_align (γ = 0)\n(Sụp đổ biểu diễn - Collapse!)", "#dc2626"),
@@ -687,6 +691,7 @@ elif menu == "4. 🧪 Nghiên Cứu Triệt Tiêu (Ablation) & Độ Nhạy Tham
             ("directau", "3. Tối Ưu Cả Hai: l_align + γ·l_uniform\n(DirectAU - Tăng trưởng bền vững!)", "#10b981"),
         ]
 
+        max_ndcg_ab = float(ablation_df["valid_ndcg_at_20"].max()) * 1.18
         for ax, (m_key, title_str, _) in zip(axes_ab, configs_ab):
             sub = ablation_df[ablation_df["mode"] == m_key]
             ax.plot(sub["epoch"], sub["alignment"], color="#f97316", lw=2.2, label="l_align")
@@ -700,7 +705,7 @@ elif menu == "4. 🧪 Nghiên Cứu Triệt Tiêu (Ablation) & Độ Nhạy Tham
             ax_r = ax.twinx()
             ax_r.plot(sub["epoch"], sub["valid_ndcg_at_20"], color="#dc2626" if m_key != "directau" else "#2563eb", lw=2.5, marker="o", ms=3.5, label="NDCG@20")
             ax_r.set_ylabel("Valid NDCG@20", color="#2563eb" if m_key == "directau" else "#dc2626", fontweight="bold")
-            ax_r.set_ylim(0, 0.035)
+            ax_r.set_ylim(0, max(0.035, max_ndcg_ab))
 
             l1, lb1 = ax.get_legend_handles_labels()
             l2, lb2 = ax_r.get_legend_handles_labels()
@@ -715,29 +720,29 @@ elif menu == "4. 🧪 Nghiên Cứu Triệt Tiêu (Ablation) & Độ Nhạy Tham
             st.error(
                 """
 **Trường hợp 1: Chỉ tối ưu $l_{\\text{align}}$ ($\\gamma = 0$)**
-- $l_{\\text{align}}$ giảm nhanh từ `1.995` xuống `0.517`, nhưng $\\exp(l_{\\text{uniform}})$ tăng vọt gấp **18 lần** (từ `0.0238` lên `0.4345`).
-- Các vector co cụm dần về một vùng nhỏ trên mặt cầu (**Dimensional Collapse**), khiến `NDCG@20` đạt đỉnh giả tạo ở Epoch 10 (`0.0204`) rồi **suy thoái tụt dốc** xuống `0.0133` ở Epoch 18!
+- $l_{\\text{align}}$ giảm nhanh nhưng $\\exp(l_{\\text{uniform}})$ tăng vọt do các vector co cụm dần về một vùng nhỏ trên mặt cầu (**Dimensional Collapse**).
+- `NDCG@20` chỉ tăng ở vài epoch đầu rồi suy thoái nhanh chóng.
 """
             )
         with c_ab2:
             st.warning(
                 """
 **Trường hợp 2: Chỉ tối ưu $l_{\\text{uniform}}$**
-- Giữ $\\exp(l_{\\text{uniform}}) \\approx 0.0208$ rất thấp (phân bố cực đều), nhưng khoảng cách các cặp tương tác dương giữ nguyên ở $l_{\\text{align}} \\approx 2.000$ (vuông góc nhau).
-- Mô hình không học được sở thích người dùng, `NDCG@20` chỉ dao động quanh `0.0000 - 0.0019` (tương đương đoán ngẫu nhiên).
+- Giữ $\\exp(l_{\\text{uniform}})$ rất thấp (phân bố cực đều), nhưng khoảng cách các cặp tương tác dương giữ nguyên ở $l_{\\text{align}} \\approx 2.000$ (vuông góc nhau).
+- Mô hình không học được sở thích người dùng, `NDCG@20` gần như bằng 0.
 """
             )
         with c_ab3:
             st.success(
                 """
 **Trường hợp 3: Tối ưu kết hợp $l_{\\text{align}} + \\gamma l_{\\text{uniform}}$**
-- Giữ vững độ đồng đều $\\exp(l_{\\text{uniform}}) \\approx 0.0232$ không bị suy thoái, đồng thời kéo $l_{\\text{align}}$ giảm đều từ `1.995` xuống `1.031`.
-- Nhờ đó, `NDCG@20` tăng trưởng liên tục và đạt **`0.0297`** ở Epoch 18 (và đạt **`0.0561`** khi hội tụ đầy đủ)!
+- Giữ vững độ đồng đều $\\exp(l_{\\text{uniform}})$ không bị suy thoái, đồng thời kéo $l_{\\text{align}}$ giảm đều qua từng epoch.
+- Nhờ đó, `NDCG@20` và `Recall@20` tăng trưởng bền vững!
 """
             )
 
     with tab_gm:
-        st.subheader("2. Khảo Sát Độ Nhạy Siêu Tham Số $\\gamma$ (Parameter Sensitivity — Section 5.6 / Figure 6)")
+        st.subheader("2. Khảo Sát Độ Nhạy Siêu Tham Số $\\gamma$ (`beauty_gamma_sensitivity.csv` — Section 5.6 / Figure 6)")
         col_gm1, col_gm2 = st.columns([1.05, 1.35])
         with col_gm1:
             st.markdown("##### 📊 Kết Quả Thực Nghiệm Khảo Sát $\\gamma$ Trên Beauty (`process_and_benmark.ipynb`):")
@@ -757,7 +762,7 @@ elif menu == "4. 🧪 Nghiên Cứu Triệt Tiêu (Ablation) & Độ Nhạy Tham
             st.info(
                 """
 💡 **Quy luật phụ thuộc mật độ dữ liệu (Section 5.6):**
-- **Beauty** (trung bình chỉ `8.9` tương tác/user): Đạt đỉnh tại **$\\gamma^* = 0.5$** (`Recall@20 = 0.1400`, `NDCG@20 = 0.0686`).
+- **Beauty** (trung bình chỉ `8.9` tương tác/user): Đạt đỉnh tại **$\\gamma^* = 0.5$**.
 - **Yelp2018** (`49.3` tương tác/user) & **Gowalla** (`34.4` tương tác/user): Số tương tác/user lớn khiến lực kéo $l_{\\text{align}}$ mạnh hơn, dễ làm các item phổ biến chụm lại, do đó cần $\\gamma$ lớn hơn (**$\\gamma^* = 1.0 - 2.0$** trên Yelp2018 và **$\\gamma^* = 1.0 - 5.0$** trên Gowalla).
 """
             )
@@ -800,9 +805,8 @@ elif menu == "4. 🧪 Nghiên Cứu Triệt Tiêu (Ablation) & Độ Nhạy Tham
 elif menu == "5. 🏆 Đối Sánh Toàn Diện: Thực Nghiệm Tự Chạy vs 9 Mô Hình SOTA":
     st.title("🏆 Bảng Đối Sánh Toàn Diện: Thực Nghiệm Tự Chạy Trên 3 Bộ Dữ Liệu & Kết Quả SOTA")
     data = load_csv_artifacts()
-    full_res = data["full_results"]
+    beauty_res = data["beauty_results"]
     all_bench = data["all_bench_results"]
-    smoke_res = data["smoke_results"]
     geom = data["geom"]
 
     tab_r1, tab_r2, tab_r3 = st.tabs([
@@ -813,16 +817,21 @@ elif menu == "5. 🏆 Đối Sánh Toàn Diện: Thực Nghiệm Tự Chạy vs 
 
     with tab_r1:
         st.subheader("1. Bảng Kết Quả Thực Nghiệm Tự Huấn Luyện (`process_and_benmark.ipynb`) Trên Cả 3 Bộ Dữ Liệu")
-        bpr_r = full_res.loc[full_res["method"] == "BPR"].iloc[0]
-        dau_r = full_res.loc[full_res["method"] == "DirectAU"].iloc[0]
+        bpr_r = beauty_res.loc[beauty_res["method"] == "BPR"].iloc[0]
+        dau_r = beauty_res.loc[beauty_res["method"] == "DirectAU"].iloc[0]
+
+        g_res = data["gowalla_results"]
+        g_dau = g_res.loc[g_res["method"] == "DirectAU"].iloc[0]
+        y_res = data["yelp_results"]
+        y_dau = y_res.loc[y_res["method"] == "DirectAU"].iloc[0]
 
         k1, k2, k3, k4 = st.columns(4)
-        k1.success(f"🥇 **Beauty DirectAU Recall@20**\n**{dau_r['test_recall@20_all']:.4f}** (+17.30% vs BPRMF)")
-        k2.success(f"🥇 **Beauty DirectAU NDCG@20**\n**{dau_r['test_ndcg@20_all']:.4f}** (+23.66% vs BPRMF)")
-        k3.success("🥇 **Yelp2018 DirectAU Recall@20**\n**0.0594** (+21.64% vs BPRMF)")
-        k4.success("🥇 **Yelp2018 DirectAU NDCG@20**\n**0.0379** (+31.76% vs BPRMF)")
+        k1.success(f"🥇 **Beauty DirectAU Recall@20**\n**{dau_r['test_recall@20_all']:.4f}** (vs BPR {bpr_r['test_recall@20_all']:.4f})")
+        k2.success(f"🥇 **Beauty DirectAU NDCG@20**\n**{dau_r['test_ndcg@20_all']:.4f}** (vs BPR {bpr_r['test_ndcg@20_all']:.4f})")
+        k3.success(f"🥇 **Gowalla DirectAU Recall@20**\n**{g_dau['test_recall@20_all']:.4f}**")
+        k4.success(f"🥇 **Yelp2018 DirectAU Recall@20**\n**{y_dau['test_recall@20_all']:.4f}**")
 
-        st.markdown("##### 📋 Kết quả Full-Item Ranking trên toàn bộ Users & toàn bộ Catalog Items của cả 3 bộ dữ liệu:")
+        st.markdown("##### 📋 Kết quả Full-Item Ranking trên toàn bộ Users & toàn bộ Catalog Items của cả 3 bộ dữ liệu (`all_datasets_benchmark_results.csv`):")
         st.dataframe(
             all_bench[
                 [
@@ -839,6 +848,7 @@ elif menu == "5. 🏆 Đối Sánh Toàn Diện: Thực Nghiệm Tự Chạy vs 
                     "test_ndcg@50_all",
                     "evaluated_users_all",
                     "catalog_items",
+                    "model_path",
                 ]
             ].style.format({
                 "gamma": lambda v: "-" if pd.isna(v) else f"{v:.1f}",
@@ -854,82 +864,6 @@ elif menu == "5. 🏆 Đối Sánh Toàn Diện: Thực Nghiệm Tự Chạy vs 
             width="stretch",
         )
 
-        st.markdown("##### 🔍 So sánh tiến trình từ Smoke Test (3 epochs × 100 batches) → Full Benchmark → Mốc 300 Epochs Bài Báo (Tập Beauty):")
-        s_bpr_r20 = smoke_res.iloc[0]["test_recall@20"] if "test_recall@20" in smoke_res.columns else smoke_res.iloc[0]["test_recall_at_20"]
-        s_bpr_n20 = smoke_res.iloc[0]["test_ndcg@20"] if "test_ndcg@20" in smoke_res.columns else smoke_res.iloc[0]["test_ndcg_at_20"]
-        s_dau_r20 = smoke_res.iloc[1]["test_recall@20"] if "test_recall@20" in smoke_res.columns else smoke_res.iloc[1]["test_recall_at_20"]
-        s_dau_n20 = smoke_res.iloc[1]["test_ndcg@20"] if "test_ndcg@20" in smoke_res.columns else smoke_res.iloc[1]["test_ndcg_at_20"]
-
-        comp_table = pd.DataFrame([
-            {
-                "Giai đoạn / Cấu hình": "1. Smoke Test (3 epochs, 100 batches/ep, 512 users)",
-                "Mô hình": "BPRMF",
-                "Recall@10": "-",
-                "Recall@20": f"{s_bpr_r20:.4f}",
-                "Recall@50": "-",
-                "NDCG@10": "-",
-                "NDCG@20": f"{s_bpr_n20:.4f}",
-                "NDCG@50": "-",
-                "Số Users Đánh Giá": "512 / 22,363",
-            },
-            {
-                "Giai đoạn / Cấu hình": "1. Smoke Test (3 epochs, 100 batches/ep, 512 users)",
-                "Mô hình": "DirectAU (γ=0.5)",
-                "Recall@10": "-",
-                "Recall@20": f"{s_dau_r20:.4f}",
-                "Recall@50": "-",
-                "NDCG@10": "-",
-                "NDCG@20": f"{s_dau_n20:.4f}",
-                "NDCG@50": "-",
-                "Số Users Đánh Giá": "512 / 22,363",
-            },
-            {
-                "Giai đoạn / Cấu hình": "2. Full Benchmark Tự Chạy (581 batches/ep, Toàn bộ Users)",
-                "Mô hình": "BPRMF (Best Ep 21)",
-                "Recall@10": f"{bpr_r['test_recall@10_all']:.4f}",
-                "Recall@20": f"{bpr_r['test_recall@20_all']:.4f}",
-                "Recall@50": f"{bpr_r['test_recall@50_all']:.4f}",
-                "NDCG@10": f"{bpr_r['test_ndcg@10_all']:.4f}",
-                "NDCG@20": f"{bpr_r['test_ndcg@20_all']:.4f}",
-                "NDCG@50": f"{bpr_r['test_ndcg@50_all']:.4f}",
-                "Số Users Đánh Giá": "22,363 / 22,363 (100%)",
-            },
-            {
-                "Giai đoạn / Cấu hình": "2. Full Benchmark Tự Chạy (581 batches/ep, Toàn bộ Users)",
-                "Mô hình": "DirectAU (γ=0.5, Ep 40)",
-                "Recall@10": f"{dau_r['test_recall@10_all']:.4f} (+18.5%)",
-                "Recall@20": f"{dau_r['test_recall@20_all']:.4f} (+17.3%)",
-                "Recall@50": f"{dau_r['test_recall@50_all']:.4f} (+14.2%)",
-                "NDCG@10": f"{dau_r['test_ndcg@10_all']:.4f} (+25.3%)",
-                "NDCG@20": f"{dau_r['test_ndcg@20_all']:.4f} (+23.7%)",
-                "NDCG@50": f"{dau_r['test_ndcg@50_all']:.4f} (+20.8%)",
-                "Số Users Đánh Giá": "22,363 / 22,363 (100%)",
-            },
-            {
-                "Giai đoạn / Cấu hình": "3. Mốc Chuẩn Bài Báo KDD '22 (300 epochs, 5 seeds)",
-                "Mô hình": "BPRMF (Paper Table 2)",
-                "Recall@10": "0.0806",
-                "Recall@20": "0.1153",
-                "Recall@50": "0.1763",
-                "NDCG@10": "0.0444",
-                "NDCG@20": "0.0534",
-                "NDCG@50": "0.0658",
-                "Số Users Đánh Giá": "22,363 / 22,363 (100%)",
-            },
-            {
-                "Giai đoạn / Cấu hình": "3. Mốc Chuẩn Bài Báo KDD '22 (300 epochs, 5 seeds)",
-                "Mô hình": "DirectAU (Paper Table 2)",
-                "Recall@10": "0.1002 (+24.3%)",
-                "Recall@20": "0.1400 (+21.4%)",
-                "Recall@50": "0.2062 (+17.0%)",
-                "NDCG@10": "0.0582 (+31.1%)",
-                "NDCG@20": "0.0686 (+28.5%)",
-                "NDCG@50": "0.0820 (+24.6%)",
-                "Số Users Đánh Giá": "22,363 / 22,363 (100%)",
-            },
-        ])
-        st.dataframe(comp_table, width="stretch")
-
         col_g1, col_g2 = st.columns(2)
         with col_g1:
             metrics_names = ["Recall@10", "Recall@20", "Recall@50", "NDCG@10", "NDCG@20", "NDCG@50"]
@@ -943,7 +877,7 @@ elif menu == "5. 🏆 Đối Sánh Toàn Diện: Thực Nghiệm Tự Chạy vs 
                 ax_b.text(idx + 0.18, v + 0.003, f"{v:.4f}", ha="center", fontsize=8, fontweight="bold")
             ax_b.set_xticks(x_pos)
             ax_b.set_xticklabels(metrics_names, fontweight="bold")
-            ax_b.set_ylim(0, 0.20)
+            ax_b.set_ylim(0, max(dau_vals) * 1.25)
             ax_b.set_ylabel("Điểm số trên tập Test (22,363 Users)")
             ax_b.set_title("Đối Sánh 6 Độ Đo Giữa BPRMF & DirectAU (Beauty)", fontweight="bold")
             ax_b.legend()
@@ -1082,55 +1016,58 @@ elif menu == "5. 🏆 Đối Sánh Toàn Diện: Thực Nghiệm Tự Chạy vs 
 
 
 # =====================================================================
-# MODULE 6: HỆ THỐNG GỢI Ý TOP-K THỰC TẾ TRÊN AMAZON BEAUTY
+# MODULE 6: HỆ THỐNG GỢI Ý TOP-K THỰC TẾ TRÊN CẢ 3 BỘ DỮ LIỆU
 # =====================================================================
-elif menu == "6. 🔍 Hệ Thống Gợi Ý Top-K Thực Tế Trên Amazon Beauty":
-    st.title("🔍 Trình Khảo Sát Gợi Ý Top-K Sản Phẩm Thực Tế (Interactive Recommender Inspector)")
+elif menu == "6. 🔍 Hệ Thống Gợi Ý Top-K Thực Tế (Beauty, Gowalla, Yelp2018)":
+    st.title("🔍 Trình Khảo Sát Gợi Ý Top-K Thực Tế (Interactive Recommender Inspector)")
     st.markdown(
         """
-Module này nạp trực tiếp các bộ trọng số đã huấn luyện (`BPR_full_best.pt`, `DirectAU_full_best.pt`, `BPR_smoke_best.pt`, `DirectAU_smoke_best.pt`) từ `final/benchmark_results/` để chạy **Full-Catalog Ranking (`12,101` sản phẩm Amazon Beauty)** trong thời gian thực.
+Module này nạp trực tiếp các bộ trọng số đã huấn luyện từ thư mục **`final/model/`** (`beauty_BPR_best.pt`, `beauty_DirectAU_best.pt`, `gowalla_BPR_best.pt`, `gowalla_DirectAU_best.pt`, `yelp2018_BPR_best.pt`, `yelp2018_DirectAU_best.pt`) và dữ liệu từ **`final/dataset/`** để chạy **Full-Catalog Ranking** trong thời gian thực.
 """
     )
 
-    assets = load_recommender_assets()
+    col_sel0, col_sel1, col_sel3 = st.columns([1.0, 1.8, 1.0])
+    with col_sel0:
+        selected_ds = st.selectbox("Chọn Bộ Dữ Liệu:", ["Beauty", "Gowalla", "Yelp2018"], index=0)
+
+    assets = load_recommender_assets(selected_ds)
     data = load_csv_artifacts()
-    showcase_list = data["showcase_users"]
     user_tokens = assets["user_tokens"]
     item_tokens = assets["item_tokens"]
     train_hist = assets["train_hist"]
     test_targ = assets["test_targ"]
     test_hist = assets["test_hist"]
+    models_dict = assets["models"]
 
-    col_sel1, col_sel2, col_sel3 = st.columns([1.5, 1, 1])
     with col_sel1:
-        preset_options = [
-            f"User {u['user']} ({u['user_token']}) — DirectAU trúng {u['dau_hits']}/{u['n_test_targets']} vs BPR {u['bpr_hits']}/{u['n_test_targets']}"
-            for u in showcase_list[:15]
-        ]
-        preset_options.insert(
-            0,
-            f"User 40 ({user_tokens[40]}) — User mẫu mặc định trong Smoke Test (eval_users[0])",
-        )
-        preset_options.append("🔢 Tự nhập chỉ số User ID bất kỳ (0 → 22,362)")
-        chosen_preset = st.selectbox("Chọn User trong tập Amazon Beauty để kiểm thử gợi ý:", preset_options, index=1)
+        if selected_ds == "Beauty":
+            showcase_list = data["showcase_users"]
+            preset_options = [
+                f"User {u['user']} (Token: {u['user_token']}) — DirectAU trúng {u['dau_hits']}/{u['n_test_targets']} vs BPR {u['bpr_hits']}/{u['n_test_targets']}"
+                for u in showcase_list[:15]
+            ]
+            preset_options.append(f"🔢 Tự nhập chỉ số User ID bất kỳ (0 → {len(user_tokens) - 1:,})")
+            chosen_preset = st.selectbox("Chọn User tiêu biểu hoặc tự nhập ID:", preset_options, index=0)
+        else:
+            eval_u_list = assets["eval_users"][:15].tolist()
+            preset_options = [f"User {u_id} (Token: {user_tokens[u_id]})" for u_id in eval_u_list]
+            preset_options.append(f"🔢 Tự nhập chỉ số User ID bất kỳ (0 → {len(user_tokens) - 1:,})")
+            chosen_preset = st.selectbox("Chọn User trong tập đánh giá hoặc tự nhập ID:", preset_options, index=0)
 
-    with col_sel2:
-        ckpt_mode = st.radio(
-            "Chọn bộ Checkpoint mô hình:",
-            ["Full Benchmark (40 Epochs)", "Smoke Test (3 Epochs)"],
-            index=0,
-        )
     with col_sel3:
-        k_val = st.slider("Số lượng sản phẩm gợi ý Top-K:", 5, 50, 20, 5)
+        k_val = st.slider("Số lượng Item gợi ý Top-K:", 5, 50, 20, 5)
 
     if chosen_preset.startswith("🔢"):
-        selected_user = st.number_input("Nhập User ID (từ 0 đến 22,362):", min_value=0, max_value=len(user_tokens) - 1, value=12469, step=1)
-    elif chosen_preset.startswith("User 40"):
-        selected_user = 40
+        selected_user = st.number_input(
+            f"Nhập User ID (từ 0 đến {len(user_tokens) - 1:,}):",
+            min_value=0,
+            max_value=len(user_tokens) - 1,
+            value=int(assets["eval_users"][0]),
+            step=1,
+        )
     else:
         selected_user = int(chosen_preset.split()[1])
 
-    models_dict = assets["full_models"] if ckpt_mode.startswith("Full") else assets["smoke_models"]
     seen_items = test_hist[selected_user]
     gt_items = test_targ[selected_user]
 
@@ -1163,8 +1100,8 @@ Module này nạp trực tiếp các bộ trọng số đã huấn luyện (`BPR
     dau_ndcg_u = float((np.array(dau_hits_bool, dtype=float) * discounts).sum() / idcg)
 
     u_c1, u_c2, u_c3, u_c4 = st.columns(4)
-    u_c1.metric("Mã định danh gốc (Amazon ReviewerID)", user_tokens[selected_user])
-    u_c2.metric("Lịch sử đã biết (Train + Valid Masked)", f"{len(seen_items)} sản phẩm")
+    u_c1.metric(f"User ID ({selected_ds})", f"{selected_user} (Token: {user_tokens[selected_user]})")
+    u_c2.metric("Lịch sử đã biết (Train + Valid Masked)", f"{len(seen_items)} items")
     u_c3.metric(f"BPRMF — Recall@{k_val} / NDCG@{k_val}", f"{bpr_rec_u*100:.1f}% / {bpr_ndcg_u:.4f}", delta=f"{sum(bpr_hits_bool)}/{len(gt_items)} Hits")
     u_c4.metric(
         f"DirectAU — Recall@{k_val} / NDCG@{k_val}",
@@ -1172,20 +1109,22 @@ Module này nạp trực tiếp các bộ trọng số đã huấn luyện (`BPR
         delta=f"{sum(dau_hits_bool)}/{len(gt_items)} Hits (Vượt trội)" if sum(dau_hits_bool) >= sum(bpr_hits_bool) else f"{sum(dau_hits_bool)}/{len(gt_items)} Hits",
     )
 
-    with st.expander("📦 Xem Chi Tiết Lịch Sử Tương Tác (Train/Valid) & Mục Tiêu Thực Tế (Test Ground-Truth ASINs) Của User Này", expanded=True):
-        gt_asins = [f"{item_tokens[i]} (ID: {i})" for i in sorted(gt_items)]
-        train_asins = [f"{item_tokens[i]}" for i in sorted(train_hist[selected_user])[:20]]
-        st.markdown(f"**🎯 Các sản phẩm mục tiêu trong tập Test (Ground-Truth Targets — {len(gt_items)} sản phẩm):** `{', '.join(gt_asins)}`")
-        st.markdown(f"**🛒 Mẫu lịch sử tương tác trong tập Train (Đã ẩn khỏi ứng viên xếp hạng):** `{', '.join(train_asins)}`")
-        st.caption("💡 Có thể tra cứu trực tiếp sản phẩm trên Amazon theo cú pháp URL: `https://www.amazon.com/dp/<ASIN>`")
+    with st.expander("📦 Xem Chi Tiết Lịch Sử Tương Tác (Train/Valid) & Mục Tiêu Thực Tế (Test Ground-Truth Items) Của User Này", expanded=True):
+        gt_tokens = [f"{item_tokens[i]} (ID: {i})" for i in sorted(gt_items)]
+        train_tokens = [f"{item_tokens[i]}" for i in sorted(train_hist[selected_user])[:20]]
+        st.markdown(f"**🎯 Các item mục tiêu trong tập Test (Ground-Truth Targets — {len(gt_items)} items):** `{', '.join(gt_tokens)}`")
+        st.markdown(f"**🛒 Mẫu lịch sử tương tác trong tập Train (Đã ẩn khỏi ứng viên xếp hạng):** `{', '.join(train_tokens)}`")
+        st.caption(
+            f"💡 Trọng số nạp từ: `final/model/{assets['prefix']}_BPR_best.pt` (Best Ep {assets['meta']['BPR_best_epoch']}) & `final/model/{assets['prefix']}_DirectAU_best.pt` (Best Ep {assets['meta']['DirectAU_best_epoch']}, γ={assets['meta']['DirectAU_gamma']})"
+        )
 
     rec_df = pd.DataFrame({
         "Hạng (Rank)": range(1, k_val + 1),
-        "BPR_ASIN": [item_tokens[i] for i in bpr_idx],
+        "BPR_Item_Token": [item_tokens[i] for i in bpr_idx],
         "BPR_Score ⟨u,i⟩": [round(s, 4) for s in bpr_sc],
         "BPR_Cosine": [round(c, 4) for c in bpr_cos],
         "BPR_Test_Hit": ["✅ TRÚNG" if h else "—" for h in bpr_hits_bool],
-        "DirectAU_ASIN": [item_tokens[i] for i in dau_idx],
+        "DirectAU_Item_Token": [item_tokens[i] for i in dau_idx],
         "DirectAU_Score ⟨u,i⟩": [round(s, 4) for s in dau_sc],
         "DirectAU_Cosine": [round(c, 4) for c in dau_cos],
         "DirectAU_Test_Hit": ["✅ TRÚNG" if h else "—" for h in dau_hits_bool],
@@ -1201,5 +1140,5 @@ Module này nạp trực tiếp các bộ trọng số đã huấn luyện (`BPR
                 styles[idx] = "background-color: #bbf7d0; font-weight: bold; color: #111827;"
         return styles
 
-    st.subheader(f"📋 Bảng Đối Sánh Danh Sách Gợi Ý Top-{k_val} Sản Phẩm (BPRMF vs DirectAU)")
+    st.subheader(f"📋 Bảng Đối Sánh Danh Sách Gợi Ý Top-{k_val} Items Trên {selected_ds} (BPRMF vs DirectAU)")
     st.dataframe(rec_df.style.apply(highlight_hit_rows, axis=1), width="stretch", height=450)

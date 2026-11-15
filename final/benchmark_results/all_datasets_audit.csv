@@ -1,4 +1,4 @@
 dataset,raw_source,k_core,raw_interactions,filtered_interactions,users,items,min_user_deg,min_item_deg,avg_inter_per_user,density_pct
-Beauty,UCSD Amazon Beauty (ratings_Beauty.csv),5-core (18 iterations),2023070,198502,22363,12101,5,5,8.88,0.0734
-Gowalla,LightGCN / SNAP Gowalla (train.txt + test.txt),5-core verified,1027370,1027370,29858,40981,9,10,34.41,0.084
-Yelp2018,LightGCN / Yelp2018 Challenge (train.txt + test.txt),5-core verified,1561406,1561406,31668,38048,18,10,49.31,0.1296
+Beauty,https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset/Beauty/Beauty.inter,5-core verified,198502,198502,22363,12101,5,5,8.88,0.0734
+Gowalla,https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset/Gowalla/Gowalla.inter,5-core verified,1027370,1027370,29858,40981,9,10,34.41,0.084
+Yelp2018,https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset/Yelp/Yelp.inter,5-core verified,1561406,1561406,31668,38048,18,10,49.31,0.1296

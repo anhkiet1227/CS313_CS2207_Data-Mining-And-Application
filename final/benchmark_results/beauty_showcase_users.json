@@ -1,0 +1,242 @@
+[
+  {
+    "user": 9183,
+    "user_token": "9184",
+    "bpr_hits": 1,
+    "dau_hits": 2,
+    "n_test_targets": 6,
+    "n_history": 58
+  },
+  {
+    "user": 770,
+    "user_token": "771",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 17
+  },
+  {
+    "user": 1630,
+    "user_token": "1631",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 1767,
+    "user_token": "1768",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 7
+  },
+  {
+    "user": 2007,
+    "user_token": "2008",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 8
+  },
+  {
+    "user": 2203,
+    "user_token": "2204",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 3,
+    "n_history": 32
+  },
+  {
+    "user": 2214,
+    "user_token": "2215",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 13
+  },
+  {
+    "user": 2812,
+    "user_token": "2813",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 6
+  },
+  {
+    "user": 2820,
+    "user_token": "2821",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 3011,
+    "user_token": "3012",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 3115,
+    "user_token": "3116",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 5
+  },
+  {
+    "user": 3253,
+    "user_token": "3254",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 3477,
+    "user_token": "3478",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 3498,
+    "user_token": "3499",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 8
+  },
+  {
+    "user": 3869,
+    "user_token": "3870",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 4061,
+    "user_token": "4062",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 6
+  },
+  {
+    "user": 4544,
+    "user_token": "4545",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 4660,
+    "user_token": "4661",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 6
+  },
+  {
+    "user": 4929,
+    "user_token": "4930",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 7
+  },
+  {
+    "user": 5267,
+    "user_token": "5268",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 6924,
+    "user_token": "6925",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 7490,
+    "user_token": "7491",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 5
+  },
+  {
+    "user": 7629,
+    "user_token": "7630",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 12
+  },
+  {
+    "user": 8288,
+    "user_token": "8289",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 10
+  },
+  {
+    "user": 9313,
+    "user_token": "9314",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 15
+  },
+  {
+    "user": 9885,
+    "user_token": "9886",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 6
+  },
+  {
+    "user": 9901,
+    "user_token": "9902",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 9
+  },
+  {
+    "user": 11018,
+    "user_token": "11019",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  },
+  {
+    "user": 12166,
+    "user_token": "12167",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 8
+  },
+  {
+    "user": 12815,
+    "user_token": "12816",
+    "bpr_hits": 0,
+    "dau_hits": 1,
+    "n_test_targets": 1,
+    "n_history": 4
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "unified_source_repo": "https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset",
+  "generated_at_utc": "2026-11-15T12:03:26.617329+00:00",
+  "datasets": {
+    "Beauty": {
+      "dataset": "Beauty",
+      "url": "https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset/Beauty/Beauty.inter",
+      "local_file": "dataset/beauty.inter",
+      "sha256": "dbafa8fc90c3b51a840e3d880c734554a4827974902d11f0dffdda5579cb209f",
+      "raw_interactions": 198502,
+      "filtered_interactions": 198502,
+      "users": 22363,
+      "items": 12101
+    },
+    "Gowalla": {
+      "dataset": "Gowalla",
+      "url": "https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset/Gowalla/Gowalla.inter",
+      "local_file": "dataset/gowalla.inter",
+      "sha256": "2eb60b6e422c5c361dc4de73fcbb19a2d03659f927ef3d9a36ebfacab9d93d9d",
+      "raw_interactions": 1027370,
+      "filtered_interactions": 1027370,
+      "users": 29858,
+      "items": 40981
+    },
+    "Yelp2018": {
+      "dataset": "Yelp2018",
+      "url": "https://raw.githubusercontent.com/THUwangcy/DirectAU/main/dataset/Yelp/Yelp.inter",
+      "local_file": "dataset/yelp2018.inter",
+      "sha256": "bd59621f6b9392ed5d5f011df3b2c4e9986650d253dfee483fb33a2f00c92789",
+      "raw_interactions": 1561406,
+      "filtered_interactions": 1561406,
+      "users": 31668,
+      "items": 38048
+    }
+  }
+}

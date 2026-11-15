@@ -1,4 +1,0 @@
-split,interactions,users,items,min_per_user,max_per_user,targets_without_train_item
-train,148766,22363,12098,3,164,0
-valid,24868,22363,8780,1,20,5
-test,24868,22363,8788,1,20,11
